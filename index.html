@@ -9,7 +9,6 @@
     :root {
       --bg-color-light: #ffffff;
       --text-color-light: #000000;
-
       --bg-color-dark: #333333;
       --text-color-dark: #f0f0f0;
     }
@@ -23,11 +22,6 @@
     body.dark-theme {
       background-color: var(--bg-color-dark);
       color: var(--text-color-dark);
-    }
-
-    .container {
-      max-width: 100%;
-      padding: 10px;
     }
 
     .container {
@@ -91,99 +85,37 @@
       background-color: #27ae60;
       cursor: default;
     }
-
-    .stats {
-      margin: 20px 0;
-      font-size: 1.2em;
-    }
-    .reset-btn,
-    .theme-toggle-btn {
-      padding: 10px 20px;
-      font-size: 1.1em;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin: 5px;
-    }
-
-    .reset-btn {
-      background-color: #e74c3c;
-      color: white;
-    }
-
-    .reset-btn:hover {
-      background-color: #c0392b;
-    }
-
-    .theme-toggle-btn {
-      background-color: #3498db;
-      color: white;
-    }
-
-    .theme-toggle-btn:hover {
-      background-color: #2980b9;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="stats">game of memory</h1>
-    <div class="stats">
-      Steps: <span id="moves">0</span> | Pairs found: <span id="pairs">0</span>
-    </div>
+    <h1 class="stats">Game of Memory</h1>
+    <div class="stats">Steps: <span id="moves">0</span> | Pairs found: <span id="pairs">0</span></div>
     <div class="game-board" id="gameBoard"></div>
     <div>
-      <button class="reset-btn" onclick="resetGame()">start again</button>
-      <button class="theme-toggle-btn" onclick="toggleTheme()">Theme background</button>
+      <button class="reset-btn" onclick="resetGame()">Start Again</button>
+      <button class="theme-toggle-btn" onclick="toggleTheme()">Theme Background</button>
     </div>
   </div>
 
   <script>
-    const webapp = window.Telegram.WebApp;
-    webapp.ready();
-    webapp.expand();
+    let images = [
+      'Astralis.png', 'Falcons.png', 'Navi.png', 'Heroic.png',
+      'Vitality.png', 'Mouz.png', 'Faze.png', 'Spirit.png'
+    ];
+    images = images.concat(images);
 
-    let isDarkTheme = false;
-
-    function toggleTheme() {
-      isDarkTheme = !isDarkTheme;
-      if (isDarkTheme) {
-        document.body.classList.add('dark-theme');
-      } else {
-        document.body.classList.remove('dark-theme');
-      }
-    }
-
-    let cards = [];
     let flippedCards = [];
     let matchedPairs = 0;
     let moves = 0;
     let isProcessing = false;
 
-    function sendScoreToBot() {
-      webapp.sendData(
-        JSON.stringify({
-          moves: moves,
-          pairs: matchedPairs,
-          completed: matchedPairs === 8
-        })
-      );
-    }
-
-    function initGame() 
-    {
-      cards = [];
-      for (let i = 1; i <= 8; i++) {
-        cards.push(i, i);
-      }
-      shuffleArray(cards);
-
+    function initGame() {
+      shuffleArray(images);
       flippedCards = [];
       matchedPairs = 0;
       moves = 0;
       isProcessing = false;
-
       updateStats();
       createBoard();
     }
@@ -199,14 +131,14 @@
       const gameBoard = document.getElementById('gameBoard');
       gameBoard.innerHTML = '';
 
-      cards.forEach((num, index) => {
+      images.forEach((imgSrc, index) => {
         const cardWrapper = document.createElement('div');
         cardWrapper.className = 'card-wrapper';
 
         const card = document.createElement('div');
         card.className = 'card';
         card.dataset.index = index;
-        card.dataset.value = num;
+        card.dataset.value = imgSrc;
         card.onclick = () => flipCard(card);
 
         const cardFront = document.createElement('div');
@@ -214,7 +146,12 @@
 
         const cardBack = document.createElement('div');
         cardBack.className = 'card-back';
-        cardBack.textContent = num;
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.borderRadius = '5px';
+        cardBack.appendChild(img);
 
         card.appendChild(cardFront);
         card.appendChild(cardBack);
@@ -224,12 +161,7 @@
     }
 
     async function flipCard(card) {
-      if (
-        isProcessing ||
-        flippedCards.length >= 2 ||
-        card.classList.contains('flipped') ||
-        card.classList.contains('matched')
-      ) {
+      if (isProcessing || flippedCards.length >= 2 || card.classList.contains('flipped') || card.classList.contains('matched')) {
         return;
       }
 
@@ -241,23 +173,13 @@
         updateStats();
         isProcessing = true;
 
-        if (flippedCards[0].dataset.value === flippedCards[1].dataset.value) 
-        {
+        if (flippedCards[0].dataset.value === flippedCards[1].dataset.value) {
           flippedCards.forEach(card => card.classList.add('matched'));
           matchedPairs++;
           updateStats();
-
-          if (matchedPairs === 8) {
-            setTimeout(() => {
-              webapp.showAlert('Поздравляю! Вы выйграли!');
-              sendScoreToBot();
-            }, 500);
-          }
         } else {
           await new Promise(resolve => setTimeout(resolve, 1000));
-          flippedCards.forEach(card => {
-            card.classList.remove('flipped');
-          });
+          flippedCards.forEach(card => card.classList.remove('flipped'));
         }
 
         flippedCards = [];
